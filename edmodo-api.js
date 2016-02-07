@@ -1,4 +1,5 @@
 Edmodo.baseUrl = 'https://api.edmodo.com/';
+
 var scopes = {
   basic: 'basic',
   readGroups: 'read_groups',
@@ -25,25 +26,39 @@ var edmodoCall = function edmodoCall(endpoint) {
   return response;
 };
 
+var getQuery = function getQuery(params) {
+  var query = [];
+  for(var key in params) {
+    if (params.hasOwnProperty(key)) {
+      query.push(key + "=" + params[key]);
+    }
+  }
+  return '?' + query.join("&");
+};
+
+/*
+ * grant_type: (refresh_token)
+ */
 Edmodo.refreshToken = function refreshToken() {
   // TODO with client_id, with client_secret, with redirect_url, with refresh_token
-  // with grant_type (refresh_token)
   var endpoint = 'oauth/token';
 };
 
-// TODO pagination with page, with per_page
-// on groups, groupMemberships, on conections
-// Link: <https://api.edmodo.com/groups?page=1&per_page=2>; rel="previous", <https://api.edmodo.com/groups?page=3&per_page=2>; rel="next"
-// X-Total-Count: 104
+/*
+ * scope: basic read_user_email
+ */
+Edmodo.getUser = function getUser(id) {
+  id = id || 'me';
+  var endpoint = 'users/' + id;
+  var user = edmodoCall(endpoint);
 
-Edmodo.getUser = function getUser() {
-  // scope basic read_user_email
-  // TODO by id, by me, by email
-  var endpoint = 'users/';
+  return user;
 };
 
+/*
+ * scope: read_groups 
+ */
 Edmodo.getGroups = function getGroups(groupId) {
-  // scope read_groups
   groupId = groupId || '';
   var endpoint = 'groups/' + groupId;
   var groups = edmodoCall(endpoint);
@@ -51,29 +66,72 @@ Edmodo.getGroups = function getGroups(groupId) {
   return groups;
 };
 
-Edmodo.getGroupMemberships = function getGroupMemberships() {
-  // TODO by id, by user_id, by group_id
+/*
+ * scope: read_groups 
+ * params = {
+ *   id: String,
+ *     OR
+ *   group_id: String,
+ *   user_id: String,
+ *   page: String,
+ *   per_page: String,
+ * }
+ */
+Edmodo.getGroupMemberships = function getGroupMemberships(params) {
   // scope read_groups
-  var endpoint = 'group_memberships/';
+  var id = params.id;
+
+  var query = '/' + id;
+  if (! id) {
+    query = getQuery(params);
+  }
+
+  var endpoint = 'group_memberships' + query;
+  var groupMemberships = edmodoCall(endpoint);
+
+  return groupMemberships;
 };
 
-Edmodo.getConnections = function getConnections() {
-  // TODO by id, by user_id, by status
-  // scope read_connections
-  var endpoint = 'connections/';
+/* 
+ * scope: read_connections
+ * params = {
+ *   id: String,
+ *     OR
+ *   user_id: String,
+ *   status: String (active, pending, blocked),
+ *   page: String,
+ *   per_page: String,
+ * }
+ */
+Edmodo.getConnections = function getConnections(params) {
+  var id = params.id;
+
+  var query = '/' + id;
+  if (! id) {
+    query = getQuery(params);
+  }
+
+  var endpoint = 'connections' + query;
+  var connections = edmodoCall(endpoint);
+
+  return connections;
 };
-//
+
+/*
+ * scope: create_messages
+ */
 Edmodo.postMessages = function postMessages() {
   // TODO req content_type (note), req content (req text, opt attachments), req recipients
   // opt post_at, opt moderated
-  // scope create_messages
   var endpoint = 'messages/';
 };
 
+/*
+ * scope: write_library_items
+ */
 Edmodo.postLibraryItems = function postLibraryItems() {
   // TODO req type (folder, file, link embed)
   // req item (title [folder, link, embed], link_url, content [embed])
-  // scope write_library_items
   var endpoint = 'library_items/';
 };
 
