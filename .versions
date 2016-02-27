@@ -28,8 +28,8 @@ id-map@1.0.4
 jquery@1.11.4
 localstorage@1.0.5
 logging@1.0.8
-merlin:edmodo@1.0.5
-merlin:edmodo-api@0.0.1
+merlin:edmodo@1.0.7
+merlin:edmodo-api@0.0.2
 merlin:external-api@0.0.2
 meteor@1.1.10
 minifiers@1.1.7
