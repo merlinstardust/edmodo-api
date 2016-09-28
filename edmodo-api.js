@@ -10,25 +10,18 @@ const scopes = {
 };
 
 const edmodoCall = (endpoint, {method, data} = {}) => {
-  const endpointUrl = Edmodo.baseUrl + endpoint;
+  const url = Edmodo.baseUrl + endpoint;
 
   const edmodoToken = Meteor.user().services.edmodo.accessToken;
   const httpOptions = {
-    headers: {Authorization: 'Bearer ' + edmodoToken},
+    headers: {Authorization: `Bearer ${edmodoToken}`},
   };
 
   if (data) {
     httpOptions.data = data;
   }
 
-  const response = ExternalApi.callSync({
-    url: endpointUrl,
-    method,
-    httpOptions,
-    errorProperties: {code: 'status_code', message: 'error'},
-  });
-
-  return response;
+  return ExternalApi.callSync({httpOptions, method, url});
 };
 
 /*
@@ -37,31 +30,28 @@ const edmodoCall = (endpoint, {method, data} = {}) => {
  *   refreshToken: String,
  * }
  */
-Edmodo.refreshToken = ({redirectUri, refreshToken}) => {
-  const endpoint = 'oauth/token';
-  const data = {
-    grant_type: 'refresh_token',
-    client_id: Meteor.settings.Edmodo.clientId,
-    client_secret: Meteor.settings.Edmodo.clientSecret,
-    redirect_uri: redirectUri,
-    refresh_token: refreshToken,
-  };
-  return edmodoCall(endpoint, {method: 'POST', data});
-};
+Edmodo.refreshToken = ({redirectUri, refreshToken}) => (
+  edmodoCall('oauth/token', {
+    method: 'POST',
+    data: {
+      grant_type: 'refresh_token',
+      client_id: Meteor.settings.Edmodo.clientId,
+      client_secret: Meteor.settings.Edmodo.clientSecret,
+      redirect_uri: redirectUri,
+      refresh_token: refreshToken,
+    },
+  })
+);
 
 /*
  * scope: basic read_user_email
  */
-Edmodo.getUser = (id = 'me') => {
-  return edmodoCall(`users/${id}`);
-};
+Edmodo.getUser = (id = 'me') => edmodoCall(`users/${id}`);
 
 /*
  * scope: read_groups
  */
-Edmodo.getGroups = (groupId = '')  => {
-  return edmodoCall(`groups/${groupId}`);
-};
+Edmodo.getGroups = (groupId = '')  => edmodoCall(`groups/${groupId}`);
 
 /*
  * scope: read_groups
@@ -77,9 +67,6 @@ Edmodo.getGroups = (groupId = '')  => {
 Edmodo.getGroupMemberships = (paramsOrId = '') => {
   const endpoint = 'group_memberships';
 
-  if (! paramsOrId) {
-    return edmodoCall(endpoint);
-  }
   if (paramsOrId.constructor === String) {
     const id = paramsOrId;
     return edmodoCall(`${endpoint}/${id}`);
@@ -114,9 +101,6 @@ Edmodo.getGroupMemberships = (paramsOrId = '') => {
 Edmodo.getConnections = (paramsOrId = '') => {
   const endpoint = 'connections';
 
-  if (! paramsOrId) {
-    return edmodoCall(endpoint);
-  }
   if (paramsOrId.constructor === String) {
     const id = paramsOrId;
     return edmodoCall(`${endpoint}/${id}`);
@@ -144,14 +128,14 @@ Edmodo.getConnections = (paramsOrId = '') => {
  *   moderated: Boolean,
  * }
  */
-Edmodo.postMessages = (params) => {
-  const {text, attachments, recipents, postAt, moderated} = params;
+Edmodo.postMessages = ({text, attachments, recipents, postAt, moderated}) => {
   const data = {
     content_type: 'note',
     content: {text, attachments},
     recipients,
     moderated,
   };
+
   if (postAt) {
     data.post_at = postAt;
   }
@@ -170,17 +154,14 @@ Edmodo.postMessages = (params) => {
  *   },
  * }
  */
-Edmodo.postLibraryItems = (params) => {
-  const {type, item} = params;
-  const {title, linkUrl, content} = item;
-  const data = {type};
+Edmodo.postLibraryItems = ({type, item: {title, linkUrl, content}}) => {
+  const data = {item: {title}, type};
 
-  data.item = {title};
-  if (linkUrl) {
-    data.item.link_url = linkUrl;
-  }
   if (content) {
     data.item.content = content;
+  }
+  if (linkUrl) {
+    data.item.link_url = linkUrl;
   }
 
   return edmodoCall('library_items/', {method: 'POST', data});
