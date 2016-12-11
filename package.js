@@ -2,7 +2,7 @@ Package.describe({
   name: 'merlin:edmodo-api',
   summary: 'API service for Edmodo accounts',
   git: 'https://github.com/merlinpatt/edmodo-api',
-  version: '0.0.4',
+  version: '0.0.5',
   documentation: 'README.md',
 });
 

@@ -30,8 +30,8 @@ const edmodoCall = (endpoint, {method, data} = {}) => {
  *   refreshToken: String,
  * }
  */
-Edmodo.refreshToken = ({redirectUri, refreshToken}) => (
-  edmodoCall('oauth/token', {
+Edmodo.refreshToken = ({redirectUri, refreshToken}) => {
+  const response = edmodoCall('oauth/token', {
     method: 'POST',
     data: {
       grant_type: 'refresh_token',
@@ -40,8 +40,16 @@ Edmodo.refreshToken = ({redirectUri, refreshToken}) => (
       redirect_uri: redirectUri,
       refresh_token: refreshToken,
     },
-  })
-);
+  });
+
+  return Object.assign({}, response, {
+    accessToken: response.access_token,
+    refreshToken: response.refresh_token,
+    createdAt: response.created_at,
+    expiresIn: response.expires_in,
+    tokenType: response.token_type,
+  });
+};
 
 /*
  * scope: basic read_user_email
